@@ -68,6 +68,7 @@ options:
         - interface ethernet
         - interface ethernet poe
         - interface ethernet switch
+        - interface ethernet switch egress-vlan-tag
         - interface ethernet switch port
         - interface gre
         - interface gre6
@@ -770,6 +771,9 @@ def sync_with_primary_keys(module, api, path, path_info):
 
     old_data = get_api_data(api_path, path_info)
     old_data = remove_dynamic(old_data)
+    # CRS1xx/2xx workaround, unlikely to work on devices with more than one switch chip
+    if path_info.fallback_single_value and len(old_data) == 1 and '.id' not in old_data[0]:
+        return sync_single_value(module, api, path, path_info)
     old_data_by_key = OrderedDict()
     id_by_key = {}
     for entry in old_data:

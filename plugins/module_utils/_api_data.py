@@ -20,6 +20,7 @@ class APIData(object):
                  unknown_mechanism=False,
                  fully_understood=False,
                  fixed_entries=False,
+                 fallback_single_value=False,
                  fields=None):
         if sum([primary_keys is not None, stratify_keys is not None, has_identifier, single_value, unknown_mechanism]) > 1:
             raise ValueError('primary_keys, stratify_keys, has_identifier, single_value, and unknown_mechanism are mutually exclusive')
@@ -34,6 +35,7 @@ class APIData(object):
         self.unknown_mechanism = unknown_mechanism
         self.fully_understood = fully_understood
         self.fixed_entries = fixed_entries
+        self.fallback_single_value = fallback_single_value
         if fixed_entries and primary_keys is None:
             raise ValueError('fixed_entries can only be used with primary_keys')
         if fields is None:
@@ -2591,12 +2593,43 @@ PATHS = {
     ('interface', 'ethernet', 'switch'): APIData(
         fixed_entries=True,
         primary_keys=('name', ),
+        fallback_single_value=True,
         fully_understood=True,
         fields={
+            'name': KeyInfo(),
+            # CRS3xx
             'cpu-flow-control': KeyInfo(default=True),
+            'l3-hw-offloading': KeyInfo(default=False),
+            'mirror-egress-target': KeyInfo(default='none'),
             'mirror-source': KeyInfo(default='none'),
             'mirror-target': KeyInfo(default='none'),
-            'name': KeyInfo(),
+            # CRS1xx/2xx
+            'bridge-type': KeyInfo(default='customer-vid-used-as-lookup-vid'),
+            'bypass-ingress-port-policing-for': KeyInfo(default=''),
+            'bypass-l2-security-check-filter-for': KeyInfo(default=''),
+            'bypass-vlan-ingress-filter-for': KeyInfo(default=''),
+            'drop-if-invalid-or-src-port-not-member-of-vlan-on-ports': KeyInfo(default=''),
+            'drop-if-no-vlan-assignment-on-ports': KeyInfo(default=''),
+            'egress-mirror-ratio': KeyInfo(default='1/1'),
+            'egress-mirror0': KeyInfo(default='switch1-cpu,modified'),
+            'egress-mirror1': KeyInfo(default='switch1-cpu,modified'),
+            'fdb-uses': KeyInfo(default='mirror0'),
+            'forward-unknown-vlan': KeyInfo(default=True),
+            'ingress-mirror-ratio': KeyInfo(default='1/1'),
+            'ingress-mirror0': KeyInfo(default='switch1-cpu,unmodified'),
+            'ingress-mirror1': KeyInfo(default='switch1-cpu,unmodified'),
+            'mac-level-isolation': KeyInfo(default=True),
+            'mirror-egress-if-ingress-mirrored': KeyInfo(default=False),
+            'mirror-tx-on-mirror-port': KeyInfo(default=False),
+            'mirrored-packet-drop-precedence': KeyInfo(default='green'),
+            'mirrored-packet-qos-priority': KeyInfo(default=0),
+            'multicast-lookup-mode': KeyInfo(default='dst-ip-and-vid-for-ipv4'),
+            'override-existing-when-ufdb-full': KeyInfo(default=False),
+            'unicast-fdb-timeout': KeyInfo(default='5m'),
+            'unknown-vlan-lookup-mode': KeyInfo(default='svl'),
+            'use-cvid-in-one2one-vlan-lookup': KeyInfo(default=True),
+            'use-svid-in-one2one-vlan-lookup': KeyInfo(default=False),
+            'vlan-uses': KeyInfo(default='mirror0'),
         },
     ),
     ('interface', 'ethernet', 'switch', 'port'): APIData(
@@ -2608,6 +2641,54 @@ PATHS = {
             'name': KeyInfo(),
             'vlan-header': KeyInfo(default='leave-as-is'),
             'vlan-mode': KeyInfo(default='disabled'),
+        },
+    ),
+    ('interface', 'ethernet', 'switch', 'vlan'): APIData(
+        fully_understood=True,
+        # primary_keys=('ports', 'vlan-id', ),
+        primary_keys=('vlan-id', ),
+        fields={
+            'comment': KeyInfo(can_disable=True, remove_value=''),
+            'disabled': KeyInfo(default=False),
+            'flood': KeyInfo(default=False),
+            'ingress-mirror': KeyInfo(default=False),
+            'learn': KeyInfo(default=True),
+            'ports': KeyInfo(),
+            'qos-group': KeyInfo(default='none'),
+            'svl': KeyInfo(default=False),
+            'vlan-id': KeyInfo(),
+        },
+    ),
+    ('interface', 'ethernet', 'switch', 'ingress-vlan-translation'): APIData(
+        fully_understood=True,
+        primary_keys=('ports', ),
+        fields={
+            'customer-dei': KeyInfo(),
+            'customer-pcp': KeyInfo(),
+            'customer-vid': KeyInfo(),
+            'customer-vlan-format': KeyInfo(default='any'),
+            'disabled': KeyInfo(default=False),
+            'new-customer-vid': KeyInfo(),
+            'new-service-vid': KeyInfo(),
+            'pcp-propagation': KeyInfo(default=False),
+            'ports': KeyInfo(),
+            'protocol': KeyInfo(),
+            'sa-learning': KeyInfo(default=True),
+            'service-dei': KeyInfo(),
+            'service-pcp': KeyInfo(),
+            'service-vid': KeyInfo(),
+            'service-vlan-format': KeyInfo(default='any'),
+            'swap-vids': KeyInfo(),
+        },
+    ),
+    ('interface', 'ethernet', 'switch', 'egress-vlan-tag'): APIData(
+        primary_keys=('vlan-id', ),
+        fully_understood=True,
+        fields={
+            'comment': KeyInfo(can_disable=True, remove_value=''),
+            'disabled': KeyInfo(default=False),
+            'tagged-ports': KeyInfo(),
+            'vlan-id': KeyInfo(),
         },
     ),
     ('ip', 'dhcp-client', 'option'): APIData(

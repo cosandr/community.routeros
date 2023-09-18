@@ -63,6 +63,7 @@ options:
         - interface ethernet
         - interface ethernet poe
         - interface ethernet switch
+        - interface ethernet switch egress-vlan-tag
         - interface ethernet switch port
         - interface gre
         - interface gre6
